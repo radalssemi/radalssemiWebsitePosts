@@ -3,7 +3,7 @@ import cv2  # making thumbnails and medium images (pip install opencv-python)
 import re  # searching for
 import json  # writing json file
 import easygui  # selecting source folder and adding comments 
-import shutil  # copying files
+import shutil  # copying files and zipping for download
 # ! PIL needs to be installed to view image while adding comments (pip install pillow)
 
 
