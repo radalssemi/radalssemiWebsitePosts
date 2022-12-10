@@ -243,8 +243,8 @@ for filename in os.listdir(path + "\\picks\\"):
         print(f"src{currentSrcID}")
         dictionarySrc["src" + str(currentSrcID)] = filename
         copySrc(filename)
-print()
-print()
+        print()
+print("\n")
 
 
 # create download zip files with: src, edit
