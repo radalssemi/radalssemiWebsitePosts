@@ -1,11 +1,10 @@
-import zipfile  # zipping files for download
-import pathlib  # to zip folder structure
 import os  # directories and stuff
-import cv2  # making thumbnails and medium images
+import cv2  # making thumbnails and medium images (pip install opencv-python)
 import re  # searching for
 import json  # writing json file
-import easygui  # selecting source folder and adding comments
+import easygui  # selecting source folder and adding comments 
 import shutil  # copying files
+# ! PIL needs to be installed to view image while adding comments (pip install pillow)
 
 
 
@@ -24,8 +23,10 @@ import shutil  # copying files
 
 
 # check if posts.json exists:
-if not os.path.isfile("posts.json"):
-    open("./posts.json", "w")
+if not os.path.isfile(".\\posts.json"):
+    open(".\\posts.json", "w")
+    print()
+    print("posts.json didn't exist, making file")
 
 
 
@@ -41,7 +42,7 @@ if not os.path.isfile("posts.json"):
 
 
 
-with open("./posts.json", "r+") as f:
+with open(".\\posts.json", "r+") as f:
     try:
         data = json.load(f)
         data["numberOfPosts"] = data["numberOfPosts"] + 1
@@ -52,7 +53,8 @@ with open("./posts.json", "r+") as f:
         currentSrcID = currentImageID
         allPostsData = data["posts"]
     except:
-        print("error reading file! starting from 1 \n")
+        print()
+        print("error reading from file! starting from defaults \n")
         currentPostID = 1
         currentPostName = "post" + str(currentPostID)
         initialNumberOfImages = 0
@@ -62,18 +64,17 @@ with open("./posts.json", "r+") as f:
         pass
 
 
-postsDirectory = ".\\" + currentPostName
+postsDirectory = ".\\posts\\" + currentPostName
 
 directoryToMake = [postsDirectory + "\\edit", postsDirectory + "\\edit\\fullsize", postsDirectory + "\\edit\\medium", postsDirectory + "\\edit\\thumbnail", postsDirectory + "\\src", postsDirectory + "\\download"]
 
 path = easygui.diropenbox()
-imagesDate = re.search("\d\d[-]\d\d[-]\d\d\d\d", path)[0]
+imagesDate = re.search("([0-9]+(-[0-9]+)+)", path)[0]
 
 
 
 dictionarySrc = {} 
 dictionaryImages = {}
-comment = {}
 
 defaultJson = {
     "numberOfPosts": 0,
@@ -97,46 +98,6 @@ defaultJson = {
 #
 # ----- FUNCTIONS -----
 #
-
-
-
-def writeComment(commentText, commentImageID):
-    with open(".\\posts.json", "r+") as f:
-        data = json.load(f)
-        rangeStart = data["posts"][currentPostName]["edit"]["rangeStart"]
-        commentImageID += rangeStart
-        if str(comment) is not None or "":
-            data["posts"][currentPostName]["info"]["imgComments"]["img" +
-                                                                str(commentImageID)] = str(commentText)
-            f.seek(0)        # <--- should reset file position to the beginning.
-            json.dump(data, f, indent=2)
-            f.truncate()
-            print(f"comment for img{commentImageID} written:    {commentText}\n")
-        else:
-            print(f"no comment for img{commentImageID}")
-
-def addComments():
-    commentImageID = 0
-    for filename in os.listdir(".\\" + currentPostName + "\\edit\\thumbnail"):
-        commentText = easygui.enterbox(
-            "add comment", image=".\\" + currentPostName + "\\edit\\thumbnail\\" + filename)
-        writeComment(commentText, commentImageID)
-        commentImageID += 1
-
-
-
-
-def makeZipFile(toZip, zipTo):
-    with zipfile.ZipFile(zipTo, mode="w") as archive:
-        for file_path in toZip.iterdir():
-            archive.write(file_path, arcname=file_path.name)
-
-def writeFilesToZips():
-    makeZipFile(pathlib.Path(f"./{currentPostName}/edit/"),
-                f"./{currentPostName}/download/{currentPostName}-edit.zip")
-    makeZipFile(pathlib.Path(f"./{currentPostName}/src/"),
-                f"./{currentPostName}/download/{currentPostName}-src.zip")
-
 
 
 
@@ -169,6 +130,42 @@ def copySrc(filename):
     shutil.copy2(path + "\\picks\\" + filename, postsDirectory + "\\src\\")
     print(f"srcimage          {filename}")
 
+
+
+
+
+def writeFilesToZips():
+    shutil.make_archive(f".\\posts\\{currentPostName}\\download\\{currentPostName}-edit", 'zip', f".\\posts\\{currentPostName}\\edit\\")
+    shutil.make_archive(f".\\posts\\{currentPostName}\\download\\{currentPostName}-src", 'zip', f".\\posts\\{currentPostName}\\edit\\")
+    print("images zipped")
+
+
+
+
+
+def writeComment(commentText, commentImageID):
+    with open(".\\posts.json", "r+") as f:
+        data = json.load(f)
+        rangeStart = data["posts"][currentPostName]["edit"]["rangeStart"]
+        commentImageID += rangeStart
+        if commentText == "None" or bool(commentText):
+            data["posts"][currentPostName]["info"]["imgComments"]["img" + str(commentImageID)] = str(commentText)
+            f.seek(0)
+            json.dump(data, f, indent=2)
+            f.truncate()
+            print(f"comment for img{commentImageID} written:    {commentText}")
+        else:
+            print(f"no comment for img{commentImageID}")
+
+def addComments():
+    print("\n")
+    print(f"adding comments to post {currentPostName}")
+    print()
+    commentImageID = 0
+    for filename in os.listdir(postsDirectory + "\\edit\\thumbnail\\"):
+        commentText = easygui.enterbox(f"add comment for img{commentImageID}", image = f"{postsDirectory}\\edit\\thumbnail\\{filename}")
+        writeComment(commentText, commentImageID)
+        commentImageID += 1
 
 
 
@@ -232,7 +229,7 @@ print("\n")
 for filename in os.listdir(path + "\\picks\\edit"):
     if filename.endswith(".jpg" or ".jpeg" or ".png" or "JPG" or "JPEG" or "PNG"):
         currentImageID += 1
-        print(currentImageID)
+        print(f"img{currentImageID}")
         dictionaryImages["img" + str(currentImageID)] = filename
         createThumbnail(filename)
         createMedium(filename)
@@ -240,18 +237,19 @@ for filename in os.listdir(path + "\\picks\\edit"):
         print()
 print()
 # find src images and copy
-for filename in os.listdir(path + ".\\picks\\"):
+for filename in os.listdir(path + "\\picks\\"):
     if filename.endswith(".CR2"):
         currentSrcID += 1
-        dictionarySrc["img" + str(currentSrcID)] = filename
+        print(f"src{currentSrcID}")
+        dictionarySrc["src" + str(currentSrcID)] = filename
         copySrc(filename)
+print()
 print()
 
 
 # create download zip files with: src, edit
 writeFilesToZips()
-
-
+print()
 
 # I declare this here because currentImageID has to be updated
 writeThis = {
@@ -278,11 +276,11 @@ except:
     with open(".\\posts.json", "r+") as f:
         data = json.load(f)
         data = defaultJson
-        f.seek(0)        # <--- should reset file position to the beginning.
+        f.seek(0)
         json.dump(data, f, indent=2)
         f.truncate()
         print("default json loaded")
     writeJsonData()
 #
-# ----- WORKING SCRIPT -----
+# ----- END OF WORKING SCRIPT -----
 #
