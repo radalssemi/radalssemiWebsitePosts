@@ -1,6 +1,6 @@
 import os  # directories and stuff
 import cv2  # making thumbnails and medium images (pip install opencv-python)
-import re  # searching for
+import re  # searching for date in selected path
 import json  # writing json file
 import easygui  # selecting source folder and adding comments 
 import shutil  # copying files and zipping for download
