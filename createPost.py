@@ -8,7 +8,7 @@ import shutil  # copying files
 
 
 
-# -----nyuballs------------------------------------------
+# ==== nyuballs ================================= - □ x =
 # |                                                     |
 # |  This is a script I made for creating a new post    |
 # |  for this website.                                  |
